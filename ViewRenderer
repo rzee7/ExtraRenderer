@@ -1,0 +1,39 @@
+using System;
+using Xamarin.Forms.Platform.iOS;
+using Xamarin.Forms;
+using PRAExpandView;
+using PRAExpandView.iOS;
+using UIKit;
+
+[assembly: ExportRenderer(typeof(PRAView), typeof(PRARenderer))]
+namespace PRAExpandView.iOS
+{
+	public class PRARenderer : ViewRenderer
+	{
+		public PRARenderer()
+		{
+		}
+
+		protected override void OnElementChanged(ElementChangedEventArgs<Xamarin.Forms.View> e)
+		{
+			base.OnElementChanged(e);
+
+			if (e.OldElement != null)
+			{
+				var view = Control as UIView;
+
+				if (((PRAView)e.OldElement).IsVisible)
+				{
+					((PRAView)e.OldElement).IsVisible = false;
+					UIView.BeginAnimations("animationOff");
+					UIView.Animate(1.3f, () =>
+					{
+						view.Frame = new CoreGraphics.CGRect(view.Frame.Y, view.Frame.X, view.Frame.Width, 0);
+					});
+					UIView.CommitAnimations();
+
+				}
+			}
+		}
+	}
+}
