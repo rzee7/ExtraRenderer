@@ -1,0 +1,83 @@
+        public async void BindDataAndroid()
+        {
+            var yourReturnList = await ServiceHandler.Instance.GetStringData("id");
+            //In Android
+            //listView.Adapter=new subitem_adp(this,yourReturnList);
+        }
+        
+        public async void BindDataiOS()
+        {
+            var yourReturnList = await ServiceHandler.Instance.GetStringData("id");
+            //In iOS
+            //tableView.Source=new subitem_source(yourReturnList);
+        }
+    
+    /// <summary>
+    /// This class will be inside PCL or Shared project to use across the platform. It will give you reusability
+    /// </summary>
+    public class ServiceHandler
+    {
+        private string ServerUrl;
+
+        private static  ServiceHandler _serviceInstance;
+
+        /// <summary>
+        /// Service Instance to use inside an app
+        /// </summary>
+        public static ServiceHandler Instance
+        {
+            get { return _serviceInstance ?? (_serviceInstance = new ServiceHandler()); }
+        }
+
+        public ServiceHandler()
+        {
+            ServerUrl = "";
+        }
+        /// <summary>
+        /// Get data from server
+        /// </summary>
+        /// <param name="resource">Pass resource as parameter e.g. "id"</param>
+        /// <returns></returns>
+        public async Task<List<cm_subitems>> GetStringData(string resource)
+        {
+            ServerUrl = string.Format("{0}{1}", ServerUrl, resource);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ServerUrl);
+
+            // Set credentials to use for this request.
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            int inc = 0;
+            var stream = new StreamReader(response.GetResponseStream());
+            var resData = stream.ReadToEnd();
+            int totalRecord = Convert.ToInt32(resData.ToString().Split('$').Count());
+
+            //you can change this with your "ns varibale"
+            var ns = new cm_subitems[totalRecord - 1];
+            foreach (string mans in resData.ToString().Split('$'))
+            {
+                if (string.IsNullOrEmpty(mans))
+                    return new Task<List<string>>(); // avoid crash while string is null or empty
+                string[] singcat = mans.Split('*');
+                if (singcat.Count() > 0)
+                {
+                    var Cm_Cate = new cm_subitems();
+                    Cm_Cate.item_id = inc;
+                    Cm_Cate.item_name = singcat[0];
+                    Cm_Cate.item_price = singcat[1];
+                    Cm_Cate.item_description = singcat[2];
+                    Cm_Cate.img_url = singcat[3];
+                    ns[inc] = Cm_Cate;
+                    inc++;
+                }
+            }
+            return ns.ToList();
+        }
+    }
+    
+    public class cm_subitems
+    {
+        public int item_id { get; set; }
+        public string item_name { get; set; }
+        public string item_price { get; set; }
+        public string item_description { get; set; }
+        public string img_url { get; set; }
+    }
